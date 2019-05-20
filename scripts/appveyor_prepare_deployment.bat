@@ -1,0 +1,21 @@
+@ECHO OFF
+
+SET READY_TO_DEPLOY=0
+IF "%SEMVER%"=="" GOTO :EOF
+
+SET ZIP_FILE=%APPVEYOR_BUILD_VERSION%.zip
+SET LOG_URL_FILE=%APPVEYOR_BUILD_VERSION%_log.url
+SET LOG_URL=https://ci.appveyor.com/project/%APPVEYOR_ACCOUNT_NAME%/%APPVEYOR_PROJECT_NAME%/builds/%APPVEYOR_BUILD_ID%
+
+MKDIR deploy 2>NUL
+MKDIR deploy_temp 2>NUL
+PUSHD deploy_temp
+COPY ..\lovec.exe .
+COPY ..\README.md .
+COPY ..\LICENSE .
+ECHO [InternetShortcut]> %LOG_URL_FILE%
+ECHO URL=%LOG_URL%>> %LOG_URL_FILE%
+7z a -tzip "..\deploy\%ZIP_FILE%" .
+POPD
+
+SET READY_TO_DEPLOY=1

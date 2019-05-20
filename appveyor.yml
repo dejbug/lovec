@@ -1,0 +1,47 @@
+version: "{build}"
+
+max_jobs: 1
+shallow_clone: true
+
+test: off
+skip_tags: true
+skip_branch_with_pr: true
+
+branches:
+  except:
+    - gh-pages
+
+skip_commits:
+  message: /^-/
+
+cache:
+  - upx.exe
+
+install:
+  - cmd: scripts\appveyor_on_install.bat
+  - cmd: IF ERRORLEVEL 1 EXIT %ERRORLEVEL%
+
+before_build:
+  - cmd: scripts\appveyor_on_before_build.bat
+  - cmd: IF ERRORLEVEL 1 EXIT %ERRORLEVEL%
+
+build_script:
+  - cmd: mingw32-make DEPLOY=1 STATIC=1
+
+after_build:
+  - cmd: scripts\appveyor_on_after_build.bat
+  - cmd: IF ERRORLEVEL 1 EXIT %ERRORLEVEL%
+
+artifacts:
+  - path: deploy\*.zip
+    name: zip
+
+matrix:
+  fast_finish: true
+
+deploy:
+  - provider: Environment
+    name: GH
+    on:
+      branch: master
+      READY_TO_DEPLOY: 1
