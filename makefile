@@ -1,3 +1,5 @@
+SHELL := cmd.exe
+
 NAME ?= lovec
 
 DEPLOY ?= 0
