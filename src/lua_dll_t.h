@@ -1,8 +1,6 @@
 #pragma once
-#include "error_t.h"
+#include "err.h"
 #include "dll_t.h"
-
-#include "error_id.h"
 
 struct lua_dll_t
 {
@@ -24,18 +22,18 @@ struct lua_dll_t
 
 	lua_dll_t(char const * path, bool need_close=false) : dll(path)
 	{
-		if (!dll) throw error_t(error_id::E_DLL_LOAD, "DLL load error", "please specify correct path to love2d's luaXX.dll");
+		if (!dll) throw err::make("DLL load error", "please specify correct path to love2d's luaXX.dll");
 
 		luaL_newstate = dll.get<luaL_newstate_t>("luaL_newstate");
-		if (!luaL_newstate) throw error_t(error_id::E_DLL_PROC1, "luaL_newstate not found in DLL");
+		if (!luaL_newstate) throw err::make("luaL_newstate not found in DLL");
 
 		lua_close = dll.get<lua_close_t>("lua_close");
-		if (need_close && !lua_close) throw error_t(error_id::E_DLL_PROC2, "lua_close not found in DLL");
+		if (need_close && !lua_close) throw err::make("lua_close not found in DLL");
 
 		luaL_loadfile = dll.get<luaL_loadfile_t>("luaL_loadfile");
-		if (!luaL_loadfile) throw error_t(error_id::E_DLL_PROC3, "luaL_loadfile not found in DLL");
+		if (!luaL_loadfile) throw err::make("luaL_loadfile not found in DLL");
 
 		lua_dump = dll.get<lua_dump_t>("lua_dump");
-		if (!lua_dump) throw error_t(error_id::E_DLL_PROC4, "lua_dump not found in DLL");
+		if (!lua_dump) throw err::make("lua_dump not found in DLL");
 	}
 };

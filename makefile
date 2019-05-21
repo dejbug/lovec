@@ -40,12 +40,13 @@ all : deploy\$(NAME).exe
 endif
 
 
-deploy\$(NAME).exe : $(addprefix build\,main.o lua.o file_t.o crc32.o)
+deploy\$(NAME).exe : $(addprefix build\,main.o lua.o file_t.o err.o crc32.o)
 
-build\main.o : $(addprefix src\,main.cpp error_id.h error_t.h dll_t.h args_t.h lua_dll_t.h lua_handle_t.h crc32.h strutil.h path_t.h zstr_t.h cmp.h)
+build\main.o : $(addprefix src\,main.cpp err.h args_t.h lua.h lua_dll_t.h)
 
 build\lua.o : $(addprefix src\,lua.cpp lua.h)
 build\file_t.o : $(addprefix src\,file_t.cpp file_t.h)
+build\err.o : $(addprefix src\,err.cpp err.h)
 build\crc32.o : $(addprefix src\,crc32.cpp crc32.h)
 
 build : ; IF NOT EXIST $@ MKDIR $@

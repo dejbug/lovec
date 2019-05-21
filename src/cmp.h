@@ -2,7 +2,7 @@
 
 namespace cmp {
 
-static inline bool is(char a)
+static inline bool is(char)
 {
 	return false;
 }

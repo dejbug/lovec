@@ -1,16 +1,14 @@
 #include <string>
 #include <vector>
+#include <iostream>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include "error_t.h"
+#include "err.h"
 #include "args_t.h"
 #include "lua.h"
 #include "lua_dll_t.h"
-
-#include "error_id.h"
-
 
 int main(int argc, char ** argv)
 {
@@ -26,10 +24,10 @@ int main(int argc, char ** argv)
 		lua::compile(dll, args.inpath, args.outpath);
 	}
 
-	catch (error_t & e)
+	catch (std::runtime_error & e)
 	{
-		return e.exit();
+		std::cerr << "error: " << e.what() << std::endl;
 	}
 
-	return error_id::E_OK;
+	return 0;
 }
