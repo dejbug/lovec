@@ -4,6 +4,8 @@
 #include "err.h"
 #include "file_t.h"
 #include "path_t.h"
+#include "cwd_t.h"
+#include "file_find_t.h"
 
 // lovec x.lua -> lovec compile -o x.clua x.lua
 // lovec x.love -> lovec fuse -o x.love main.lua *.clua {dirs}
@@ -57,16 +59,45 @@ struct args_t
 	static void enum_lua_dlls_in_path(std::vector<std::string> & list);
 };
 
-// #include "utils.h"
-
-void args_t::enum_lua_dlls_in_path(std::vector<std::string> &)
+void args_t::enum_lua_dlls_in_path(std::vector<std::string> & paths)
 {
 	// _searchenv
 
-	std::string env;
-	std::vector<char *> ptrs;
-	path_t::get_env_paths(env, ptrs);
+	char const * const file = "lua*.dll";
 
-	for (auto path : ptrs)
-		printf("'%s'\n", path);
+	std::string env;
+	std::vector<char *> dirs;
+
+	path_t::get_env_paths(env, dirs);
+
+	if (dirs.empty())
+	{
+		// std::cout << " no paths found in PATH.\n";
+		return;
+	}
+
+	cwd_t cwd;
+
+	for (auto const dir : dirs)
+	{
+		if (!cwd.cd(dir))
+		{
+			// std::cerr << "* path not found: \"" << dir << "\".\n";
+			continue;
+		}
+
+		// std::cout << "* looking for \"" << file << "\" in path \"" << dir << "\".\n";
+
+		file_find_t ff(file);
+
+		if (ff.found()) do
+		{
+			// std::cout << "\"" << dir << "\\" << ff.name() << "\"\n";
+			std::string path = dir;
+			path += '\\';
+			path += ff.name();
+			paths.push_back(path);
+		}
+		while (ff.next());
+	}
 }

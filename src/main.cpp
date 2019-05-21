@@ -16,6 +16,9 @@ int main(int argc, char ** argv)
 	{
 		std::vector<std::string> lua_dll_paths;
 		args_t::enum_lua_dlls_in_path(lua_dll_paths);
+		for (auto const path : lua_dll_paths)
+			std::cout << path << std::endl;
+		
 		return 0;
 
 		args_t args(argc, argv);

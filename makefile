@@ -112,7 +112,7 @@ endef
 define GEN_PREREQ
 @echo --- generating prerequisites "$1" for "$2"
 @echo.
-$(CXX) -MF $1 -MM -MG $2 -MT "$1 $(notdir $(1:.d=.o))" $(CXXFLAGS)
+$(CXX) -MF $1 -MM -MG $2 -MT "$1 $(1:.d=.o)" $(CXXFLAGS)
 @echo.
 endef
 
