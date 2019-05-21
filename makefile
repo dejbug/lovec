@@ -5,6 +5,7 @@ STATIC ?= 0
 
 PEDANTIC ?= 1
 
+
 CXX := g++
 CXXFLAGS :=
 LDFLAGS :=
@@ -27,26 +28,35 @@ else
 CXXFLAGS += -Wno-unused-parameter
 endif
 
+
 .PHONY : all
 
 ifneq ($(DEPLOY), 0)
-all : $(NAME).exe
+all : deploy\$(NAME).exe | build deploy
 	strip $<
 	upx -9 $<
 else
-all : $(NAME).exe
+all : deploy\$(NAME).exe
 endif
 
-$(NAME).exe : main.o crc32.o
-main.o : main.cpp error_id.h error_t.h file_t.h dll_t.h args_t.h lua_dll_t.h lua_handle_t.h crc32.h strutil.h path_t.h zstr_t.h cmp.h
-crc32.o : crc32.cpp crc32.h
 
-%.exe : ; $(CXX) -o $@ $(filter %.o %.a %.dll,$^) $(CXXFLAGS) $(LDFLAGS)
-%.o : ; $(CXX) -o $@ -c $(filter %.c %.cpp,$^) $(CXXFLAGS)
+deploy\$(NAME).exe : build\main.o build\crc32.o
+
+build\main.o : $(addprefix src\,main.cpp error_id.h error_t.h file_t.h dll_t.h args_t.h lua_dll_t.h lua_handle_t.h crc32.h strutil.h path_t.h zstr_t.h cmp.h)
+
+build\crc32.o : $(addprefix src\,crc32.cpp crc32.h)
+
+build : ; IF NOT EXIST $@ MKDIR $@
+
+deploy : ; IF NOT EXIST $@ MKDIR $@
+
+
+%.exe : | deploy ; $(CXX) -o $@ $(filter %.o %.a %.dll,$^) $(CXXFLAGS) $(LDFLAGS)
+%.o : | build ; $(CXX) -o $@ -c $(filter %.c %.cpp,$^) $(CXXFLAGS)
+
 
 .PHONY : run clean reset
 
-run : $(NAME).exe ; @.\$<
-
-clean : ; DEL *.o 2> NUL
-reset : | clean ; DEL $(NAME).exe 2> NUL
+run : deploy\$(NAME).exe ; @.\$<
+clean : ; IF EXIST build RMDIR /S /Q build
+reset : | clean ; IF EXIST deploy RMDIR /S /Q deploy
