@@ -10,14 +10,14 @@ CXX := g++
 CXXFLAGS :=
 LDFLAGS :=
 
-ifneq ($(DEPLOY), 0)
+ifeq ($(DEPLOY), 1)
 CXXFLAGS += \
 	-O3 \
 	-flto \
 	-faggressive-loop-optimizations
 endif
 
-ifneq ($(STATIC), 0)
+ifeq ($(STATIC), 1)
 CXXFLAGS += -static
 endif
 
@@ -28,38 +28,96 @@ else
 CXXFLAGS += -Wno-unused-parameter
 endif
 
+INCLUDE_PREREQS = 1
+NON_BUILD_GOALS := clean reset
 
-.PHONY : all
 
-ifneq ($(DEPLOY), 0)
-all : deploy\$(NAME).exe | build deploy
-	strip $<
-	upx -9 $<
-else
-all : deploy\$(NAME).exe
+ifeq ($(findstring clean,$(MAKECMDGOALS)), clean)
+INCLUDE_PREREQS = 0
+else ifeq ($(findstring reset,$(MAKECMDGOALS)), reset)
+INCLUDE_PREREQS = 0
 endif
 
 
-deploy\$(NAME).exe : $(addprefix build\,main.o lua.o file_t.o err.o crc32.o)
-
-build\main.o : $(addprefix src\,main.cpp err.h args_t.h lua.h lua_dll_t.h)
-
-build\lua.o : $(addprefix src\,lua.cpp lua.h)
-build\file_t.o : $(addprefix src\,file_t.cpp file_t.h)
-build\err.o : $(addprefix src\,err.cpp err.h)
-build\crc32.o : $(addprefix src\,crc32.cpp crc32.h)
-
-build : ; IF NOT EXIST $@ MKDIR $@
-
-deploy : ; IF NOT EXIST $@ MKDIR $@
+SOURCES := $(subst /,\,$(wildcard src/*.cpp))
+PREREQS := $(SOURCES:src\\%.cpp=build\\%.d)
+OBJECTS := $(SOURCES:src\\%.cpp=build\\%.o)
 
 
-%.exe : | deploy ; $(CXX) -o $@ $(filter %.o %.a %.dll,$^) $(CXXFLAGS) $(LDFLAGS)
-%.o : | build ; $(CXX) -o $@ -c $(filter %.c %.cpp,$^) $(CXXFLAGS)
+.PHONY : all
+
+ifeq ($(DEPLOY), 1)
+all : deploy\$(NAME).exe | deploy
+	strip $<
+	upx -9 $<
+else
+all : deploy\$(NAME).exe | deploy
+endif
+
+ifeq ($(INCLUDE_PREREQS),1)
+include $(PREREQS)
+endif
+
+deploy\$(NAME).exe : $(OBJECTS)
+
+build deploy : ; $(call MKDIR,$@)
+
+deploy\\%.exe : | deploy ; $(call LINK,$@,$^)
+build\\%.o : src\%.cpp | build ; $(call COMPILE,$@,$^)
+build\\%.d : src\%.cpp | build ; $(call GEN_PREREQ,$@,$<)
 
 
 .PHONY : run clean reset
 
-run : deploy\$(NAME).exe ; @.\$<
-clean : ; IF EXIST build RMDIR /S /Q build
-reset : | clean ; IF EXIST deploy RMDIR /S /Q deploy
+run : deploy\$(NAME).exe ; $(call RUN,$<)
+clean : ; $(call DELTREE,build)
+reset : | clean ; $(call DELTREE,deploy)
+
+
+.DELETE_ON_ERROR :
+
+
+define MKDIR
+@echo --- creating dir "$1"
+@IF NOT EXIST $1 mkdir $1
+endef
+
+define DELTREE
+@echo --- removing dir "$1"
+@IF EXIST $1 ( RMDIR /S /Q $1 )
+endef
+
+define RUN
+@echo --- running "$1"
+@echo.
+@.\$1
+endef
+
+define COMPILE
+@echo --- compiling "$1"
+@echo.
+$(CXX) -c $(filter %.c %.cpp,$2) -o $1 $(CXXFLAGS)
+@echo.
+endef
+
+define LINK
+@echo --- linking "$1"
+@echo.
+$(CXX) $(filter %.o %.a %.dll,$2) -o $1 $(CXXFLAGS) $(LDFLAGS)
+@echo.
+endef
+
+define GEN_PREREQ
+@echo --- generating prerequisites "$1" for "$2"
+@echo.
+$(CXX) -MF $1 -MM -MG $2 -MT "$1 $(notdir $(1:.d=.o))" $(CXXFLAGS)
+@echo.
+endef
+
+define HAS_GOAL
+$(findstring $1,$(MAKECMDGOALS))
+endef
+
+define HAS_NON_BUILD_GOAL
+$(or $(call HAS_GOAL,clean),$(call HAS_GOAL,reset))
+endef
