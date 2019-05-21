@@ -1,7 +1,12 @@
 @ECHO OFF
 
 SET READY_TO_DEPLOY=0
-IF "%SEMVER%"=="" GOTO :EOF
+
+IF "%SEMVER%"=="" (
+ECHO WARNING: No SemVer found in commit message.
+ECHO INFO: No artifacts will be created. This was a test build only.
+GOTO :EOF
+)
 
 SET ZIP_FILE=%APPVEYOR_BUILD_VERSION%.zip
 SET LOG_URL_FILE=%APPVEYOR_BUILD_VERSION%_log.url

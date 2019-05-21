@@ -98,14 +98,14 @@ endef
 define COMPILE
 @echo --- compiling "$1"
 @echo.
-$(CXX) -c $(filter %.c %.cpp,$2) -o $1 $(CXXFLAGS)
+$(CXX) -o $1 -c $(filter %.c %.cpp,$2) $(CXXFLAGS)
 @echo.
 endef
 
 define LINK
 @echo --- linking "$1"
 @echo.
-$(CXX) $(filter %.o %.a %.dll,$2) -o $1 $(CXXFLAGS) $(LDFLAGS)
+$(CXX) -o $1 $(filter %.o %.a %.dll,$2) $(CXXFLAGS) $(LDFLAGS)
 @echo.
 endef
 
