@@ -5,30 +5,14 @@ struct file_t
 {
 	FILE * handle = nullptr;
 
-	file_t(char const * path, char const * mode) : handle(fopen(path, mode))
-	{
-	}
+	file_t(char const * path, char const * mode);
 
-	~file_t()
-	{
-		if (!handle) return;
-		fclose(handle);
-		handle = nullptr;
-	}
+	~file_t() noexcept;
 
-	bool operator!() const
-	{
-		return !handle;
-	}
+	file_t(file_t &&) = default;
+	file_t& operator=(file_t &&) = default;
+
+	bool operator!() const;
 
 	static bool exists(char const * path);
 };
-
-
-bool file_t::exists(char const * path)
-{
-	FILE * f = fopen(path, "rb");
-	if (!f) return false;
-	fclose(f);
-	return true;
-}
